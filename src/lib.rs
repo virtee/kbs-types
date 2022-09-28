@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 mod tee;
+
 #[cfg(feature = "tee-sev")]
 pub use tee::sev::{SevChallenge, SevRequest};
 
@@ -11,6 +12,21 @@ pub enum Tee {
     Sgx,
     Snp,
     Tdx,
+}
+
+/*
+ *  NOTE: Although not explicitly a part of the KBS attestation protocol, this
+ *        type can be handy when VMMs are looking to register an encrypted
+ *        workload with an attestation server. That way, when TEE-encrypted
+ *        guests are looking to attest, they can have a launch measurement to
+ *        compare with.
+ */
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Register {
+    pub workload_id: String,
+    pub launch_measurement: String,
+    pub tee_config: String,
+    pub passphrase: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -55,6 +71,24 @@ pub struct Response {
 #[cfg(test)]
 mod tests {
     use crate::*;
+
+    #[test]
+    fn parse_register() {
+        let data = r#"
+        {
+            "workload_id": "TEST_WORKLOAD_ID",
+            "launch_measurement": "MEASUREMENT",
+            "tee_config": "CONFIG",
+            "passphrase": "mysecretpassphrase"
+        }"#;
+
+        let register: Register = serde_json::from_str(data).unwrap();
+
+        assert_eq!(register.workload_id, "TEST_WORKLOAD_ID");
+        assert_eq!(register.launch_measurement, "MEASUREMENT");
+        assert_eq!(register.tee_config, "CONFIG");
+        assert_eq!(register.passphrase, "mysecretpassphrase");
+    }
 
     #[test]
     fn parse_request() {
