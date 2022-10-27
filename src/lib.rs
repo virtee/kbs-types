@@ -4,6 +4,9 @@ mod tee;
 #[cfg(feature = "tee-sev")]
 pub use tee::sev::{SevChallenge, SevRequest};
 
+#[cfg(feature = "tee-snp")]
+pub use tee::snp::SnpRequest;
+
 #[derive(Serialize, Clone, Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Tee {
