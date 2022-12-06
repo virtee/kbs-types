@@ -28,7 +28,7 @@ pub struct Challenge {
     pub extra_params: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct TeePubKey {
     pub kty: String,
     pub alg: String,
