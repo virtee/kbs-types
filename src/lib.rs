@@ -52,6 +52,13 @@ pub struct Response {
     pub tag: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ErrorInformation {
+    #[serde(rename = "type")]
+    pub error_type: String,
+    pub detail: String,
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;
@@ -124,5 +131,19 @@ mod tests {
         assert_eq!(attestation.tee_pubkey.alg, "fakealgorithm");
         assert_eq!(attestation.tee_pubkey.k, "fakepubkey");
         assert_eq!(attestation.tee_evidence, "fakeevidence");
+    }
+
+    #[test]
+    fn parse_error_information() {
+        let data = r#"
+        {
+            "type": "problemtype",
+            "detail": "problemdetail"
+        }"#;
+
+        let info: ErrorInformation = serde_json::from_str(data).unwrap();
+
+        assert_eq!(info.error_type, "problemtype");
+        assert_eq!(info.detail, "problemdetail");
     }
 }
