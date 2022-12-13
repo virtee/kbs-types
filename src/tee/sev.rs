@@ -26,7 +26,7 @@ mod tests {
     use procfs::CpuInfo;
     use sev::certs;
     use sev::certs::Verifiable;
-    use sev::firmware::Firmware;
+    use sev::firmware::host::Firmware;
     use sev::launch::sev::Policy;
     use sev::session::Session;
 
