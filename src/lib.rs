@@ -37,9 +37,11 @@ pub struct Challenge {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct TeePubKey {
-    pub kty: String,
     pub alg: String,
-    pub k: String,
+    #[serde(rename = "k-mod")]
+    pub k_mod: String,
+    #[serde(rename = "k-exp")]
+    pub k_exp: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -125,18 +127,18 @@ mod tests {
         let data = r#"
         {
             "tee-pubkey": {
-                "kty": "fakekeytype",
                 "alg": "fakealgorithm",
-                "k": "fakepubkey"
+                "k-mod": "fakemodulus",
+                "k-exp": "fakeexponent"
             },
             "tee-evidence": "fakeevidence"
         }"#;
 
         let attestation: Attestation = serde_json::from_str(data).unwrap();
 
-        assert_eq!(attestation.tee_pubkey.kty, "fakekeytype");
         assert_eq!(attestation.tee_pubkey.alg, "fakealgorithm");
-        assert_eq!(attestation.tee_pubkey.k, "fakepubkey");
+        assert_eq!(attestation.tee_pubkey.k_mod, "fakemodulus");
+        assert_eq!(attestation.tee_pubkey.k_exp, "fakeexponent");
         assert_eq!(attestation.tee_evidence, "fakeevidence");
     }
 
