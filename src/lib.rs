@@ -10,6 +10,7 @@ pub use tee::snp::{SnpAttestation, SnpRequest};
 #[derive(Serialize, Clone, Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Tee {
+    AzSnpVtpm,
     Sev,
     Sgx,
     Snp,
