@@ -39,9 +39,9 @@ pub struct Challenge {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct TeePubKey {
     pub alg: String,
-    #[serde(rename = "k-mod")]
+    #[serde(rename = "n")]
     pub k_mod: String,
-    #[serde(rename = "k-exp")]
+    #[serde(rename = "e")]
     pub k_exp: String,
 }
 
@@ -124,13 +124,13 @@ mod tests {
     }
 
     #[test]
-    fn parse_attesation() {
+    fn parse_attestation() {
         let data = r#"
         {
             "tee-pubkey": {
                 "alg": "fakealgorithm",
-                "k-mod": "fakemodulus",
-                "k-exp": "fakeexponent"
+                "n": "fakemodulus",
+                "e": "fakeexponent"
             },
             "tee-evidence": "fakeevidence"
         }"#;
