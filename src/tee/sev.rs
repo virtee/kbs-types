@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use sev::certs::Chain;
+use sev::certs::sev::Chain;
 use sev::launch::sev::Start;
 use sev::Build;
 
@@ -24,8 +24,7 @@ mod tests {
 
     use codicon::Decoder;
     use procfs::CpuInfo;
-    use sev::certs;
-    use sev::certs::Verifiable;
+    use sev::certs::sev::{ca::Chain as CaChain, sev::Certificate, Chain, Verifiable};
     use sev::firmware::host::Firmware;
     use sev::launch::sev::Policy;
     use sev::session::Session;
@@ -93,7 +92,7 @@ mod tests {
         }
     }
 
-    fn fetch_chain(fw: &mut Firmware) -> Result<certs::Chain, Error> {
+    fn fetch_chain(fw: &mut Firmware) -> Result<Chain, Error> {
         const CEK_SVC: &str = "https://kdsintf.amd.com/cek/id";
         const ASK_ARK_SVC: &str = "https://developer.amd.com/wp-content/resources/";
 
@@ -107,15 +106,14 @@ mod tests {
         let mut rsp = reqwest::get(&url).map_err(|_| Error::DownloadCek)?;
         assert!(rsp.status().is_success());
 
-        chain.cek =
-            (certs::sev::Certificate::decode(&mut rsp, ())).map_err(|_| Error::DecodeCek)?;
+        chain.cek = (Certificate::decode(&mut rsp, ())).map_err(|_| Error::DecodeCek)?;
 
         let cpu_model = find_cpu_model()?;
         let url = format!("{}/ask_ark_{}.cert", ASK_ARK_SVC, cpu_model);
         let mut rsp = reqwest::get(&url).map_err(|_| Error::DownloadAskArk)?;
 
-        Ok(certs::Chain {
-            ca: certs::ca::Chain::decode(&mut rsp, ()).map_err(|_| Error::DecodeAskArk)?,
+        Ok(Chain {
+            ca: CaChain::decode(&mut rsp, ()).map_err(|_| Error::DecodeAskArk)?,
             sev: chain,
         })
     }
