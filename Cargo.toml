@@ -21,6 +21,5 @@ sev = { version = "1.2.0", features = ["openssl"], optional = true }
 
 [dev-dependencies]
 codicon = "3.0.0"
+curl = "0.4"
 procfs = "0.10.1"
-reqwest = "0.9.15"
-
