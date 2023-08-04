@@ -25,6 +25,7 @@ mod tests {
     use std::path::PathBuf;
 
     use codicon::Decoder;
+    use curl::easy::Easy;
     use procfs::CpuInfo;
     use sev::certs::sev::{ca::Chain as CaChain, sev::Certificate, Chain, Verifiable};
     use sev::firmware::host::Firmware;
@@ -94,6 +95,33 @@ mod tests {
         }
     }
 
+    struct CurlAgent {
+        easy: Easy,
+    }
+
+    impl CurlAgent {
+        fn new() -> Self {
+            CurlAgent { easy: Easy::new() }
+        }
+
+        fn get(&mut self, url: &str) -> Result<Vec<u8>, curl::Error> {
+            let mut rsp = Vec::new();
+
+            self.easy.post(false)?;
+            self.easy.url(url)?;
+
+            let mut transfer = self.easy.transfer();
+            transfer.write_function(|data| {
+                rsp.extend_from_slice(data);
+                Ok(data.len())
+            })?;
+            transfer.perform()?;
+            drop(transfer);
+
+            Ok(rsp)
+        }
+    }
+
     fn fetch_chain(fw: &mut Firmware) -> Result<Chain, Error> {
         const CEK_SVC: &str = "https://kdsintf.amd.com/cek/id";
         const ASK_ARK_SVC: &str = "https://developer.amd.com/wp-content/resources/";
@@ -105,17 +133,18 @@ mod tests {
         let id = fw.get_identifier().map_err(|_| Error::FetchIdentifier)?;
         let url = format!("{}/{}", CEK_SVC, id);
 
-        let mut rsp = reqwest::get(&url).map_err(|_| Error::DownloadCek)?;
-        assert!(rsp.status().is_success());
+        let mut curl_agent = CurlAgent::new();
 
-        chain.cek = (Certificate::decode(&mut rsp, ())).map_err(|_| Error::DecodeCek)?;
+        let rsp = curl_agent.get(&url).map_err(|_| Error::DownloadCek)?;
+
+        chain.cek = (Certificate::decode(&mut rsp.as_slice(), ())).map_err(|_| Error::DecodeCek)?;
 
         let cpu_model = find_cpu_model()?;
         let url = format!("{}/ask_ark_{}.cert", ASK_ARK_SVC, cpu_model);
-        let mut rsp = reqwest::get(&url).map_err(|_| Error::DownloadAskArk)?;
+        let rsp = curl_agent.get(&url).map_err(|_| Error::DownloadAskArk)?;
 
         Ok(Chain {
-            ca: CaChain::decode(&mut rsp, ()).map_err(|_| Error::DecodeAskArk)?,
+            ca: CaChain::decode(&mut rsp.as_slice(), ()).map_err(|_| Error::DecodeAskArk)?,
             sev: chain,
         })
     }
