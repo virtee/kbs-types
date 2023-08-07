@@ -17,6 +17,8 @@ pub enum Tee {
     Tdx,
     // Arm Confidential Compute Architecture
     Cca,
+    // China Secure Virtualization
+    Csv,
 
     // This value is only used for testing an attestation server, and should not
     // be used in an actual attestation scenario.
