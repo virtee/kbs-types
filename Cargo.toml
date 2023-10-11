@@ -9,7 +9,7 @@ license = "Apache-2.0"
 
 [features]
 tee-sev = [ "sev" ]
-tee-snp = [ "sev" ]
+tee-snp = [ ]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
