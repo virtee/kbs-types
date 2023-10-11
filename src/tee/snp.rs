@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::String;
+
 #[derive(Serialize, Deserialize)]
 pub struct SnpRequest {
     pub workload_id: String,

@@ -1,3 +1,15 @@
+// Support using this crate without the standard library
+#![cfg_attr(not(feature = "std"), no_std)]
+// As long as there is a memory allocator, we can still use this crate
+// without the rest of the standard library by using the `alloc` crate
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use alloc::string::String;
+#[cfg(feature = "std")]
+use std::string::String;
+
 use serde::{Deserialize, Serialize};
 
 mod tee;

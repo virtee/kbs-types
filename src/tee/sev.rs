@@ -3,6 +3,8 @@ use sev::certs::sev::Chain;
 use sev::launch::sev::Start;
 use sev::Build;
 
+use crate::String;
+
 #[derive(Serialize, Deserialize)]
 pub struct SevRequest {
     pub build: Build,
