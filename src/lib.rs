@@ -23,6 +23,7 @@ pub use tee::snp::{SnpAttestation, SnpRequest};
 #[serde(rename_all = "lowercase")]
 pub enum Tee {
     AzSnpVtpm,
+    AzTdxVtpm,
     Sev,
     Sgx,
     Snp,
