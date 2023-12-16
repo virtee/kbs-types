@@ -38,7 +38,7 @@ pub enum Tee {
     Sample,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Request {
     pub version: String,
     pub tee: Tee,
@@ -46,7 +46,7 @@ pub struct Request {
     pub extra_params: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Challenge {
     pub nonce: String,
     #[serde(rename = "extra-params")]
@@ -63,7 +63,7 @@ pub struct TeePubKey {
     pub k_exp: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Attestation {
     #[serde(rename = "tee-pubkey")]
     pub tee_pubkey: TeePubKey,
@@ -71,7 +71,7 @@ pub struct Attestation {
     pub tee_evidence: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Response {
     pub protected: String,
     pub encrypted_key: String,
@@ -80,7 +80,7 @@ pub struct Response {
     pub tag: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ErrorInformation {
     #[serde(rename = "type")]
     pub error_type: String,
