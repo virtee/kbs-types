@@ -12,7 +12,7 @@ default = [ "std" ]
 alloc = [ "serde/alloc", "serde_json/alloc" ]
 std = [ "serde/std", "serde_json/std" ]
 tee-sev = [ "sev" ]
-tee-snp = [ ]
+tee-snp = [ "sev" ]
 
 [dependencies]
 serde = { version = "1.0", default-features = false, features = ["derive"] }
