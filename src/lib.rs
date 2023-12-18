@@ -17,7 +17,7 @@ mod tee;
 pub use tee::sev::{SevChallenge, SevRequest};
 
 #[cfg(feature = "tee-snp")]
-pub use tee::snp::SnpAttestation;
+pub use tee::snp::{Error as SnpDecodeError, SnpAttestation};
 
 #[derive(Serialize, Clone, Copy, Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
