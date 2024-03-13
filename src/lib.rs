@@ -32,6 +32,8 @@ pub enum Tee {
     Cca,
     // China Secure Virtualization
     Csv,
+    // IBM Z Secure Execution
+    Se,
 
     // This value is only used for testing an attestation server, and should not
     // be used in an actual attestation scenario.
