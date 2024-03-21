@@ -71,6 +71,8 @@ pub struct Attestation {
     pub tee_pubkey: TeePubKey,
     #[serde(rename = "tee-evidence")]
     pub tee_evidence: String,
+    #[serde(rename = "extra-params")]
+    pub extra_params: String,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -153,7 +155,8 @@ mod tests {
                 "n": "fakemodulus",
                 "e": "fakeexponent"
             },
-            "tee-evidence": "fakeevidence"
+            "tee-evidence": "fakeevidence",
+            "extra_params": "fakeextraparams",
         }"#;
 
         let attestation: Attestation = serde_json::from_str(data).unwrap();
@@ -163,6 +166,7 @@ mod tests {
         assert_eq!(attestation.tee_pubkey.k_mod, "fakemodulus");
         assert_eq!(attestation.tee_pubkey.k_exp, "fakeexponent");
         assert_eq!(attestation.tee_evidence, "fakeevidence");
+        assert_eq!(attestation.extra_params, "fakeextraparams");
     }
 
     #[test]
