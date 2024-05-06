@@ -4,7 +4,7 @@ description = "Rust (de)serializable types for KBS"
 version = "0.6.0"
 authors = ["Sergio Lopez <slp@redhat.com>"]
 edition = "2021"
-homepage = "https://github.com/virtee/kbs-types"
+repository = "https://github.com/virtee/kbs-types"
 license = "Apache-2.0"
 
 [features]
