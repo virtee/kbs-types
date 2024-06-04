@@ -57,13 +57,24 @@ pub struct Challenge {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct TeePubKey {
-    pub kty: String,
-    pub alg: String,
-    #[serde(rename = "n")]
-    pub k_mod: String,
-    #[serde(rename = "e")]
-    pub k_exp: String,
+#[serde(tag = "kty")]
+pub enum TeePubKey {
+    RSA {
+        alg: String,
+        #[serde(rename = "n")]
+        k_mod: String,
+        #[serde(rename = "e")]
+        k_exp: String,
+    },
+    /// Elliptic Curve Keys
+    /// fields defined in
+    /// [RFC 7518 Section 6.1](https://www.rfc-editor.org/rfc/rfc7518.html#page-28)
+    EC {
+        crv: String,
+        alg: String,
+        x: String,
+        y: String,
+    },
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -145,11 +156,38 @@ mod tests {
     }
 
     #[test]
-    fn parse_attestation() {
+    fn parse_attestation_ec() {
         let data = r#"
         {
             "tee-pubkey": {
-                "kty": "fakekeytype",
+                "kty": "EC",
+                "crv": "fakecrv",
+                "alg": "fakealgorithm",
+                "x": "fakex",
+                "y": "fakey"
+            },
+            "tee-evidence": "fakeevidence"
+        }"#;
+
+        let attestation: Attestation = serde_json::from_str(data).unwrap();
+
+        let TeePubKey::EC { alg, crv, x, y } = attestation.tee_pubkey else {
+            panic!("Must be an EC key");
+        };
+
+        assert_eq!(alg, "fakealgorithm");
+        assert_eq!(crv, "fakecrv");
+        assert_eq!(x, "fakex");
+        assert_eq!(y, "fakey");
+        assert_eq!(attestation.tee_evidence, "fakeevidence");
+    }
+
+    #[test]
+    fn parse_attestation_rsa() {
+        let data = r#"
+        {
+            "tee-pubkey": {
+                "kty": "RSA",
                 "alg": "fakealgorithm",
                 "n": "fakemodulus",
                 "e": "fakeexponent"
@@ -159,10 +197,13 @@ mod tests {
 
         let attestation: Attestation = serde_json::from_str(data).unwrap();
 
-        assert_eq!(attestation.tee_pubkey.kty, "fakekeytype");
-        assert_eq!(attestation.tee_pubkey.alg, "fakealgorithm");
-        assert_eq!(attestation.tee_pubkey.k_mod, "fakemodulus");
-        assert_eq!(attestation.tee_pubkey.k_exp, "fakeexponent");
+        let TeePubKey::RSA { alg, k_mod, k_exp } = attestation.tee_pubkey else {
+            panic!("Must be a RSA key");
+        };
+
+        assert_eq!(alg, "fakealgorithm");
+        assert_eq!(k_mod, "fakemodulus");
+        assert_eq!(k_exp, "fakeexponent");
         assert_eq!(attestation.tee_evidence, "fakeevidence");
     }
 
