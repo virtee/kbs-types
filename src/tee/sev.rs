@@ -163,7 +163,7 @@ mod tests {
             workload_id: "fakeid".to_string(),
         };
 
-        let sev_request_json = serde_json::to_string(&sev_request).unwrap();
+        let sev_request_json = serde_json::to_value(&sev_request).unwrap();
 
         println!("SevRequest:\n{}", sev_request_json);
 
@@ -190,7 +190,7 @@ mod tests {
         assert_eq!(request.version, "0.0.0");
         assert_eq!(request.tee, Tee::Sev);
 
-        let sev_request: SevRequest = serde_json::from_str(&request.extra_params).unwrap();
+        let sev_request: SevRequest = serde_json::from_value(request.extra_params).unwrap();
 
         assert_eq!(sev_request.build.version.major, 1);
         assert_eq!(sev_request.build.version.minor, 49);
@@ -206,7 +206,7 @@ mod tests {
         let data = fs::read_to_string(d).unwrap();
 
         let request: Request = serde_json::from_str(&data).unwrap();
-        let sev_request: SevRequest = serde_json::from_str(&request.extra_params).unwrap();
+        let sev_request: SevRequest = serde_json::from_value(request.extra_params).unwrap();
 
         let policy = Policy::default();
         let session = Session::try_from(policy).unwrap();
@@ -217,7 +217,7 @@ mod tests {
             start,
         };
 
-        let sev_challenge_json = serde_json::to_string(&sev_challenge).unwrap();
+        let sev_challenge_json = serde_json::to_value(&sev_challenge).unwrap();
 
         println!("SevChallenge:\n{}", sev_challenge_json);
 
@@ -242,7 +242,7 @@ mod tests {
 
         assert_eq!(challenge.nonce, "42");
 
-        let sev_challenge: SevChallenge = serde_json::from_str(&challenge.extra_params).unwrap();
+        let sev_challenge: SevChallenge = serde_json::from_value(challenge.extra_params).unwrap();
 
         assert_eq!(sev_challenge.id, "fakeid");
         assert_eq!(sev_challenge.start.policy.minfw.major, 0);

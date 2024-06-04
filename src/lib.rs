@@ -7,6 +7,7 @@ extern crate alloc;
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use alloc::string::String;
+use serde_json::Value;
 #[cfg(feature = "std")]
 use std::string::String;
 
@@ -45,14 +46,14 @@ pub struct Request {
     pub version: String,
     pub tee: Tee,
     #[serde(rename = "extra-params")]
-    pub extra_params: String,
+    pub extra_params: Value,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Challenge {
     pub nonce: String,
     #[serde(rename = "extra-params")]
-    pub extra_params: String,
+    pub extra_params: Value,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -70,7 +71,7 @@ pub struct Attestation {
     #[serde(rename = "tee-pubkey")]
     pub tee_pubkey: TeePubKey,
     #[serde(rename = "tee-evidence")]
-    pub tee_evidence: String,
+    pub tee_evidence: Value,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
