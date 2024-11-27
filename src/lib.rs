@@ -89,6 +89,8 @@ pub struct Attestation {
 pub struct Response {
     pub protected: String,
     pub encrypted_key: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aad: Option<String>,
     pub iv: String,
     pub ciphertext: String,
     pub tag: String,
@@ -153,6 +155,29 @@ mod tests {
         assert_eq!(response.iv, "randomdata");
         assert_eq!(response.ciphertext, "fakeencoutput");
         assert_eq!(response.tag, "faketag");
+        assert_eq!(response.aad, None);
+    }
+
+    #[test]
+    fn parse_response_with_aad() {
+        let data = r#"
+        {
+            "protected": "fakejoseheader",
+            "encrypted_key": "fakekey",
+            "iv": "randomdata",
+            "aad": "fakeaad",
+            "ciphertext": "fakeencoutput",
+            "tag": "faketag"
+        }"#;
+
+        let response: Response = serde_json::from_str(data).unwrap();
+
+        assert_eq!(response.protected, "fakejoseheader");
+        assert_eq!(response.encrypted_key, "fakekey");
+        assert_eq!(response.iv, "randomdata");
+        assert_eq!(response.ciphertext, "fakeencoutput");
+        assert_eq!(response.tag, "faketag");
+        assert_eq!(response.aad, Some("fakeaad".into()));
     }
 
     #[test]
