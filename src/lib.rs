@@ -8,6 +8,7 @@ extern crate alloc;
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use alloc::string::String;
 use serde_json::Value;
+use std::collections::BTreeMap;
 #[cfg(feature = "std")]
 use std::string::String;
 
@@ -86,8 +87,20 @@ pub struct Attestation {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct ProtectedHeader {
+    /// Enryption algorithm for encrypted key
+    alg: String,
+    /// Encryption algorithm for payload
+    enc: String,
+
+    /// Other fields of Protected Header
+    #[serde(skip_serializing_if = "BTreeMap::is_empty", flatten)]
+    other_fields: BTreeMap<String, String>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Response {
-    pub protected: String,
+    pub protected: ProtectedHeader,
     pub encrypted_key: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub aad: Option<String>,
@@ -141,7 +154,10 @@ mod tests {
     fn parse_response() {
         let data = r#"
         {
-            "protected": "fakejoseheader",
+            "protected": {
+                "alg": "fakealg",
+                "enc": "fakeenc"
+            },
             "encrypted_key": "fakekey",
             "iv": "randomdata",
             "ciphertext": "fakeencoutput",
@@ -150,7 +166,9 @@ mod tests {
 
         let response: Response = serde_json::from_str(data).unwrap();
 
-        assert_eq!(response.protected, "fakejoseheader");
+        assert_eq!(response.protected.alg, "fakealg");
+        assert_eq!(response.protected.enc, "fakeenc");
+        assert!(response.protected.other_fields.is_empty());
         assert_eq!(response.encrypted_key, "fakekey");
         assert_eq!(response.iv, "randomdata");
         assert_eq!(response.ciphertext, "fakeencoutput");
@@ -162,7 +180,10 @@ mod tests {
     fn parse_response_with_aad() {
         let data = r#"
         {
-            "protected": "fakejoseheader",
+            "protected": {
+                "alg": "fakealg",
+                "enc": "fakeenc"
+            },
             "encrypted_key": "fakekey",
             "iv": "randomdata",
             "aad": "fakeaad",
@@ -172,7 +193,37 @@ mod tests {
 
         let response: Response = serde_json::from_str(data).unwrap();
 
-        assert_eq!(response.protected, "fakejoseheader");
+        assert_eq!(response.protected.alg, "fakealg");
+        assert_eq!(response.protected.enc, "fakeenc");
+        assert!(response.protected.other_fields.is_empty());
+        assert_eq!(response.encrypted_key, "fakekey");
+        assert_eq!(response.iv, "randomdata");
+        assert_eq!(response.ciphertext, "fakeencoutput");
+        assert_eq!(response.tag, "faketag");
+        assert_eq!(response.aad, Some("fakeaad".into()));
+    }
+
+    #[test]
+    fn parse_response_with_protectedheader() {
+        let data = r#"
+        {
+            "protected": {
+                "alg": "fakealg",
+                "enc": "fakeenc",
+                "fakefield": "fakevalue"
+            },
+            "encrypted_key": "fakekey",
+            "iv": "randomdata",
+            "aad": "fakeaad",
+            "ciphertext": "fakeencoutput",
+            "tag": "faketag"
+        }"#;
+
+        let response: Response = serde_json::from_str(data).unwrap();
+
+        assert_eq!(response.protected.alg, "fakealg");
+        assert_eq!(response.protected.enc, "fakeenc");
+        assert_eq!(response.protected.other_fields["fakefield"], "fakevalue");
         assert_eq!(response.encrypted_key, "fakekey");
         assert_eq!(response.iv, "randomdata");
         assert_eq!(response.ciphertext, "fakeencoutput");
