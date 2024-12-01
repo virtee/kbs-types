@@ -89,13 +89,13 @@ pub struct Attestation {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ProtectedHeader {
     /// Enryption algorithm for encrypted key
-    alg: String,
+    pub alg: String,
     /// Encryption algorithm for payload
-    enc: String,
+    pub enc: String,
 
     /// Other fields of Protected Header
     #[serde(skip_serializing_if = "BTreeMap::is_empty", flatten)]
-    other_fields: BTreeMap<String, String>,
+    pub other_fields: BTreeMap<String, String>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
