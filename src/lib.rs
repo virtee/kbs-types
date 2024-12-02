@@ -6,7 +6,7 @@
 extern crate alloc;
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
-use alloc::{collections::btree_map::BTreeMap, string::String};
+use alloc::{collections::btree_map::BTreeMap, string::String, vec::Vec};
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
 use serde_json::Value;
 #[cfg(all(feature = "std", not(feature = "alloc")))]
@@ -96,6 +96,16 @@ pub struct ProtectedHeader {
     /// Other fields of Protected Header
     #[serde(skip_serializing_if = "BTreeMap::is_empty", flatten)]
     pub other_fields: BTreeMap<String, String>,
+}
+
+impl ProtectedHeader {
+    /// The generation of AAD for JWE follows [A.3.5 RFC7516](https://www.rfc-editor.org/rfc/rfc7516#appendix-A.3.5)
+    pub fn generate_aad(&self) -> Vec<u8> {
+        let protected_utf8 =
+            serde_json::to_string(&self).expect("unexpected OOM when serializing ProtectedHeader");
+        let aad = BASE64_URL_SAFE_NO_PAD.encode(protected_utf8);
+        aad.into_bytes()
+    }
 }
 
 fn serialize_base64_protected_header<S>(
@@ -222,6 +232,9 @@ mod tests {
 
     use crate::*;
 
+    #[cfg(all(feature = "alloc", not(feature = "std")))]
+    use alloc::{collections::btree_map::BTreeMap, string::ToString};
+
     #[test]
     fn parse_request() {
         let data = r#"
@@ -250,6 +263,22 @@ mod tests {
 
         assert_eq!(challenge.nonce, "42");
         assert_eq!(challenge.extra_params, "");
+    }
+
+    #[test]
+    fn protected_header_generate_aad() {
+        let protected_header = ProtectedHeader {
+            alg: "fakealg".to_string(),
+            enc: "fakeenc".to_string(),
+            other_fields: BTreeMap::new(),
+        };
+
+        let aad = protected_header.generate_aad();
+
+        assert_eq!(
+            aad,
+            "eyJhbGciOiJmYWtlYWxnIiwiZW5jIjoiZmFrZWVuYyJ9".as_bytes()
+        );
     }
 
     #[test]
