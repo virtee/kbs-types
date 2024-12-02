@@ -7,6 +7,7 @@ extern crate alloc;
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use alloc::{collections::btree_map::BTreeMap, string::String};
+use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
 use serde_json::Value;
 #[cfg(all(feature = "std", not(feature = "alloc")))]
 use std::{collections::BTreeMap, string::String};
@@ -97,15 +98,115 @@ pub struct ProtectedHeader {
     pub other_fields: BTreeMap<String, String>,
 }
 
+fn serialize_base64_protected_header<S>(
+    sub: &ProtectedHeader,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    let protected_header_json = serde_json::to_string(sub).map_err(serde::ser::Error::custom)?;
+    let encoded = BASE64_URL_SAFE_NO_PAD.encode(protected_header_json);
+    serializer.serialize_str(&encoded)
+}
+
+fn deserialize_base64_protected_header<'de, D>(deserializer: D) -> Result<ProtectedHeader, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let encoded = String::deserialize(deserializer)?;
+    let decoded = BASE64_URL_SAFE_NO_PAD
+        .decode(encoded)
+        .map_err(serde::de::Error::custom)?;
+    let protected_header = serde_json::from_slice(&decoded).map_err(serde::de::Error::custom)?;
+
+    Ok(protected_header)
+}
+
+fn serialize_base64<S>(sub: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    let encoded = BASE64_URL_SAFE_NO_PAD.encode(sub);
+    serializer.serialize_str(&encoded)
+}
+
+fn deserialize_base64<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let encoded = String::deserialize(deserializer)?;
+    let decoded = BASE64_URL_SAFE_NO_PAD
+        .decode(encoded)
+        .map_err(serde::de::Error::custom)?;
+
+    Ok(decoded)
+}
+
+fn serialize_base64_option<S>(sub: &Option<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    match sub {
+        Some(value) => {
+            let encoded = BASE64_URL_SAFE_NO_PAD.encode(value);
+            serializer.serialize_str(&encoded)
+        }
+        None => serializer.serialize_none(),
+    }
+}
+
+fn deserialize_base64_option<'de, D>(deserializer: D) -> Result<Option<Vec<u8>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let encoded = String::deserialize(deserializer)?;
+    let decoded = BASE64_URL_SAFE_NO_PAD
+        .decode(encoded)
+        .map_err(serde::de::Error::custom)?;
+
+    Ok(Some(decoded))
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Response {
+    #[serde(
+        serialize_with = "serialize_base64_protected_header",
+        deserialize_with = "deserialize_base64_protected_header"
+    )]
     pub protected: ProtectedHeader,
-    pub encrypted_key: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub aad: Option<String>,
-    pub iv: String,
-    pub ciphertext: String,
-    pub tag: String,
+
+    #[serde(
+        serialize_with = "serialize_base64",
+        deserialize_with = "deserialize_base64"
+    )]
+    pub encrypted_key: Vec<u8>,
+
+    #[serde(
+        deserialize_with = "deserialize_base64_option",
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "serialize_base64_option",
+        default = "Option::default"
+    )]
+    pub aad: Option<Vec<u8>>,
+
+    #[serde(
+        serialize_with = "serialize_base64",
+        deserialize_with = "deserialize_base64"
+    )]
+    pub iv: Vec<u8>,
+
+    #[serde(
+        serialize_with = "serialize_base64",
+        deserialize_with = "deserialize_base64"
+    )]
+    pub ciphertext: Vec<u8>,
+
+    #[serde(
+        serialize_with = "serialize_base64",
+        deserialize_with = "deserialize_base64"
+    )]
+    pub tag: Vec<u8>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -117,6 +218,8 @@ pub struct ErrorInformation {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
     use crate::*;
 
     #[test]
@@ -153,14 +256,11 @@ mod tests {
     fn parse_response() {
         let data = r#"
         {
-            "protected": {
-                "alg": "fakealg",
-                "enc": "fakeenc"
-            },
-            "encrypted_key": "fakekey",
-            "iv": "randomdata",
-            "ciphertext": "fakeencoutput",
-            "tag": "faketag"
+            "protected": "eyJhbGciOiJmYWtlYWxnIiwiZW5jIjoiZmFrZWVuYyJ9",
+            "encrypted_key": "ZmFrZWtleQ",
+            "iv": "cmFuZG9tZGF0YQ",
+            "ciphertext": "ZmFrZWVuY291dHB1dA",
+            "tag": "ZmFrZXRhZw"
         }"#;
 
         let response: Response = serde_json::from_str(data).unwrap();
@@ -168,10 +268,10 @@ mod tests {
         assert_eq!(response.protected.alg, "fakealg");
         assert_eq!(response.protected.enc, "fakeenc");
         assert!(response.protected.other_fields.is_empty());
-        assert_eq!(response.encrypted_key, "fakekey");
-        assert_eq!(response.iv, "randomdata");
-        assert_eq!(response.ciphertext, "fakeencoutput");
-        assert_eq!(response.tag, "faketag");
+        assert_eq!(response.encrypted_key, "fakekey".as_bytes());
+        assert_eq!(response.iv, "randomdata".as_bytes());
+        assert_eq!(response.ciphertext, "fakeencoutput".as_bytes());
+        assert_eq!(response.tag, "faketag".as_bytes());
         assert_eq!(response.aad, None);
     }
 
@@ -179,15 +279,12 @@ mod tests {
     fn parse_response_with_aad() {
         let data = r#"
         {
-            "protected": {
-                "alg": "fakealg",
-                "enc": "fakeenc"
-            },
-            "encrypted_key": "fakekey",
-            "iv": "randomdata",
-            "aad": "fakeaad",
-            "ciphertext": "fakeencoutput",
-            "tag": "faketag"
+            "protected": "eyJhbGciOiJmYWtlYWxnIiwiZW5jIjoiZmFrZWVuYyJ9Cg",
+            "encrypted_key": "ZmFrZWtleQ",
+            "iv": "cmFuZG9tZGF0YQ",
+            "aad": "ZmFrZWFhZA",
+            "ciphertext": "ZmFrZWVuY291dHB1dA",
+            "tag": "ZmFrZXRhZw"
         }"#;
 
         let response: Response = serde_json::from_str(data).unwrap();
@@ -195,10 +292,10 @@ mod tests {
         assert_eq!(response.protected.alg, "fakealg");
         assert_eq!(response.protected.enc, "fakeenc");
         assert!(response.protected.other_fields.is_empty());
-        assert_eq!(response.encrypted_key, "fakekey");
-        assert_eq!(response.iv, "randomdata");
-        assert_eq!(response.ciphertext, "fakeencoutput");
-        assert_eq!(response.tag, "faketag");
+        assert_eq!(response.encrypted_key, "fakekey".as_bytes());
+        assert_eq!(response.iv, "randomdata".as_bytes());
+        assert_eq!(response.ciphertext, "fakeencoutput".as_bytes());
+        assert_eq!(response.tag, "faketag".as_bytes());
         assert_eq!(response.aad, Some("fakeaad".into()));
     }
 
@@ -206,16 +303,12 @@ mod tests {
     fn parse_response_with_protectedheader() {
         let data = r#"
         {
-            "protected": {
-                "alg": "fakealg",
-                "enc": "fakeenc",
-                "fakefield": "fakevalue"
-            },
-            "encrypted_key": "fakekey",
-            "iv": "randomdata",
-            "aad": "fakeaad",
-            "ciphertext": "fakeencoutput",
-            "tag": "faketag"
+            "protected": "eyJhbGciOiJmYWtlYWxnIiwiZW5jIjoiZmFrZWVuYyIsImZha2VmaWVsZCI6ImZha2V2YWx1ZSJ9",
+            "encrypted_key": "ZmFrZWtleQ",
+            "iv": "cmFuZG9tZGF0YQ",
+            "aad": "ZmFrZWFhZA",
+            "ciphertext": "ZmFrZWVuY291dHB1dA",
+            "tag": "ZmFrZXRhZw"
         }"#;
 
         let response: Response = serde_json::from_str(data).unwrap();
@@ -223,11 +316,41 @@ mod tests {
         assert_eq!(response.protected.alg, "fakealg");
         assert_eq!(response.protected.enc, "fakeenc");
         assert_eq!(response.protected.other_fields["fakefield"], "fakevalue");
-        assert_eq!(response.encrypted_key, "fakekey");
-        assert_eq!(response.iv, "randomdata");
-        assert_eq!(response.ciphertext, "fakeencoutput");
-        assert_eq!(response.tag, "faketag");
+        assert_eq!(response.encrypted_key, "fakekey".as_bytes());
+        assert_eq!(response.iv, "randomdata".as_bytes());
+        assert_eq!(response.ciphertext, "fakeencoutput".as_bytes());
+        assert_eq!(response.tag, "faketag".as_bytes());
         assert_eq!(response.aad, Some("fakeaad".into()));
+    }
+
+    #[test]
+    fn serialize_response() {
+        let response = Response {
+            protected: ProtectedHeader {
+                alg: "fakealg".into(),
+                enc: "fakeenc".into(),
+                other_fields: [("fakefield".into(), "fakevalue".into())]
+                    .into_iter()
+                    .collect(),
+            },
+            encrypted_key: "fakekey".as_bytes().to_vec(),
+            iv: "randomdata".as_bytes().to_vec(),
+            aad: Some("fakeaad".into()),
+            tag: "faketag".as_bytes().to_vec(),
+            ciphertext: "fakeencoutput".as_bytes().to_vec(),
+        };
+
+        let expected = json!({
+            "protected": "eyJhbGciOiJmYWtlYWxnIiwiZW5jIjoiZmFrZWVuYyIsImZha2VmaWVsZCI6ImZha2V2YWx1ZSJ9",
+            "encrypted_key": "ZmFrZWtleQ",
+            "iv": "cmFuZG9tZGF0YQ",
+            "aad": "ZmFrZWFhZA",
+            "ciphertext": "ZmFrZWVuY291dHB1dA",
+            "tag": "ZmFrZXRhZw"
+        });
+
+        let serialized = serde_json::to_value(&response).unwrap();
+        assert_eq!(serialized, expected);
     }
 
     #[test]
