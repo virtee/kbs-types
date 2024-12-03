@@ -5,6 +5,9 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
+mod error;
+pub use error::{KbsTypesError, Result};
+
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use alloc::string::String;
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
@@ -101,18 +104,17 @@ pub struct ProtectedHeader {
 
 impl ProtectedHeader {
     /// The generation of AAD for JWE follows [A.3.5 RFC7516](https://www.rfc-editor.org/rfc/rfc7516#appendix-A.3.5)
-    pub fn generate_aad(&self) -> Vec<u8> {
-        let protected_utf8 =
-            serde_json::to_string(&self).expect("unexpected OOM when serializing ProtectedHeader");
+    pub fn generate_aad(&self) -> Result<Vec<u8>> {
+        let protected_utf8 = serde_json::to_string(&self)?;
         let aad = BASE64_URL_SAFE_NO_PAD.encode(protected_utf8);
-        aad.into_bytes()
+        Ok(aad.into_bytes())
     }
 }
 
 fn serialize_base64_protected_header<S>(
     sub: &ProtectedHeader,
     serializer: S,
-) -> Result<S::Ok, S::Error>
+) -> std::result::Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
 {
@@ -121,7 +123,9 @@ where
     serializer.serialize_str(&encoded)
 }
 
-fn deserialize_base64_protected_header<'de, D>(deserializer: D) -> Result<ProtectedHeader, D::Error>
+fn deserialize_base64_protected_header<'de, D>(
+    deserializer: D,
+) -> std::result::Result<ProtectedHeader, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
@@ -134,7 +138,7 @@ where
     Ok(protected_header)
 }
 
-fn serialize_base64<S>(sub: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error>
+fn serialize_base64<S>(sub: &Vec<u8>, serializer: S) -> std::result::Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
 {
@@ -142,7 +146,7 @@ where
     serializer.serialize_str(&encoded)
 }
 
-fn deserialize_base64<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+fn deserialize_base64<'de, D>(deserializer: D) -> std::result::Result<Vec<u8>, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
@@ -154,7 +158,10 @@ where
     Ok(decoded)
 }
 
-fn serialize_base64_option<S>(sub: &Option<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error>
+fn serialize_base64_option<S>(
+    sub: &Option<Vec<u8>>,
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
 {
@@ -167,7 +174,9 @@ where
     }
 }
 
-fn deserialize_base64_option<'de, D>(deserializer: D) -> Result<Option<Vec<u8>>, D::Error>
+fn deserialize_base64_option<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<Vec<u8>>, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
@@ -271,7 +280,7 @@ mod tests {
             other_fields: BTreeMap::new(),
         };
 
-        let aad = protected_header.generate_aad();
+        let aad = protected_header.generate_aad().unwrap();
 
         assert_eq!(
             aad,
