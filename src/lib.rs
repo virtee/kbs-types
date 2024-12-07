@@ -6,11 +6,10 @@
 extern crate alloc;
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
-use alloc::string::String;
+use alloc::{collections::btree_map::BTreeMap, string::String};
 use serde_json::Value;
-use std::collections::BTreeMap;
-#[cfg(feature = "std")]
-use std::string::String;
+#[cfg(all(feature = "std", not(feature = "alloc")))]
+use std::{collections::BTreeMap, string::String};
 
 use serde::{Deserialize, Serialize};
 
