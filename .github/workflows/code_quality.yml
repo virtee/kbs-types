@@ -26,5 +26,8 @@ jobs:
       - name: Formatting (rustfmt)
         run: cargo fmt -- --check
 
-      - name: Clippy (all features)
-        run: cargo clippy --all-features -- -D warnings
+      - name: Clippy (std)
+        run: cargo clippy --no-default-features --features std -- -D warnings
+
+      - name: Clippy (alloc)
+        run: cargo clippy --no-default-features --features alloc -- -D warnings
