@@ -48,7 +48,7 @@ pub enum Tee {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Request {
     pub version: String,
-    pub tee: Tee,
+    pub tees: Vec<Tee>,
     #[serde(rename = "extra-params")]
     pub extra_params: Value,
 }
@@ -247,14 +247,14 @@ mod tests {
         let data = r#"
         {
             "version": "0.0.0",
-            "tee": "sev",
+            "tees": ["sev"],
             "extra-params": ""
         }"#;
 
         let request: Request = serde_json::from_str(data).unwrap();
 
         assert_eq!(request.version, "0.0.0");
-        assert_eq!(request.tee, Tee::Sev);
+        assert_eq!(request.tees, vec![Tee::Sev]);
         assert_eq!(request.extra_params, "");
     }
 
