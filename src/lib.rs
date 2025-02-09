@@ -6,6 +6,7 @@
 extern crate alloc;
 
 mod error;
+pub mod plugins;
 pub use error::{KbsTypesError, Result};
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
@@ -13,7 +14,7 @@ use alloc::{string::String, vec::Vec};
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
 use serde_json::{Map, Value};
 #[cfg(all(feature = "std", not(feature = "alloc")))]
-use std::string::String;
+use std::{string::String, vec::Vec};
 
 use serde::{Deserialize, Serialize};
 

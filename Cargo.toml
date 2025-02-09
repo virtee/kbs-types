@@ -9,13 +9,14 @@ license = "Apache-2.0"
 
 [features]
 default = [ "std" ]
-alloc = ["base64/alloc",  "serde/alloc", "serde_json/alloc" ]
-std = ["base64/std", "serde/std", "serde_json/std", "thiserror/std"]
+alloc = ["base64/alloc", "p384/alloc", "serde/alloc", "serde_json/alloc" ]
+std = ["base64/std", "p384/std", "serde/std", "serde_json/std", "thiserror/std"]
 tee-sev = [ "sev" ]
 tee-snp = [ "sev" ]
 
 [dependencies]
 base64 = { version = "0.22.1", default-features = false }
+p384 = { version = "0.13.1", default-features = false, features = ["arithmetic", "ecdh"] }
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0", default-features = false }
 sev = { version = "5.0.0", features = ["openssl"], optional = true }
