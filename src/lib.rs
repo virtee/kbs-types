@@ -40,9 +40,10 @@ pub enum Tee {
     // IBM Z Secure Execution
     Se,
 
-    // This value is only used for testing an attestation server, and should not
+    // These values are only used for testing an attestation server, and should not
     // be used in an actual attestation scenario.
     Sample,
+    SampleDevice,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
