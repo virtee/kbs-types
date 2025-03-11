@@ -24,7 +24,7 @@ pub use tee::sev::{SevChallenge, SevRequest};
 #[cfg(feature = "tee-snp")]
 pub use tee::snp::{Error as SnpDecodeError, SnpAttestation};
 
-#[derive(Serialize, Clone, Copy, Deserialize, Debug, Eq, PartialEq)]
+#[derive(Serialize, Clone, Copy, Deserialize, Debug, Eq, Hash, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Tee {
     AzSnpVtpm,
