@@ -14,7 +14,7 @@ pub enum Error {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SnpAttestation {
     pub report: String,
-    pub gen: String,
+    pub r#gen: String,
 }
 
 impl TryInto<(AttestationReport, Generation)> for SnpAttestation {
@@ -22,14 +22,15 @@ impl TryInto<(AttestationReport, Generation)> for SnpAttestation {
 
     fn try_into(self) -> Result<(AttestationReport, Generation), Self::Error> {
         let report: AttestationReport = from_str(&self.report).map_err(Error::ReportDecode)?;
-        let gen = match &self.gen[..] {
+        let r#gen = match &self.r#gen[..] {
             "naples" => Generation::Naples,
             "rome" => Generation::Rome,
             "milan" => Generation::Milan,
             "genoa" => Generation::Genoa,
+            "turin" => Generation::Turin,
             _ => return Err(Error::GenerationDecode),
         };
 
-        Ok((report, gen))
+        Ok((report, r#gen))
     }
 }
