@@ -24,7 +24,7 @@ pub use tee::sev::{SevChallenge, SevRequest};
 #[cfg(feature = "tee-snp")]
 pub use tee::snp::{Error as SnpDecodeError, SnpAttestation};
 
-#[derive(Serialize, Clone, Copy, Deserialize, Debug, Eq, PartialEq)]
+#[derive(Serialize, Clone, Copy, Deserialize, Debug, Eq, Hash, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Tee {
     AzSnpVtpm,
@@ -40,15 +40,16 @@ pub enum Tee {
     // IBM Z Secure Execution
     Se,
 
-    // This value is only used for testing an attestation server, and should not
+    // These values are only used for testing an attestation server, and should not
     // be used in an actual attestation scenario.
     Sample,
+    SampleDevice,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Request {
     pub version: String,
-    pub tee: Tee,
+    pub tees: Vec<Tee>,
     #[serde(rename = "extra-params")]
     pub extra_params: Value,
 }
@@ -247,14 +248,14 @@ mod tests {
         let data = r#"
         {
             "version": "0.0.0",
-            "tee": "sev",
+            "tees": ["sev"],
             "extra-params": ""
         }"#;
 
         let request: Request = serde_json::from_str(data).unwrap();
 
         assert_eq!(request.version, "0.0.0");
-        assert_eq!(request.tee, Tee::Sev);
+        assert_eq!(request.tees, vec![Tee::Sev]);
         assert_eq!(request.extra_params, "");
     }
 
