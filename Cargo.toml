@@ -1,7 +1,7 @@
 [package]
 name = "kbs-types"
 description = "Rust (de)serializable types for KBS"
-version = "0.10.0"
+version = "0.11.0"
 authors = ["Sergio Lopez <slp@redhat.com>"]
 edition = "2021"
 repository = "https://github.com/virtee/kbs-types"
