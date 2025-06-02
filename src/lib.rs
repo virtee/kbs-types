@@ -24,7 +24,7 @@ pub use tee::sev::{SevChallenge, SevRequest};
 #[cfg(feature = "tee-snp")]
 pub use tee::snp::{Error as SnpDecodeError, SnpAttestation};
 
-#[derive(Serialize, Clone, Copy, Deserialize, Debug, Eq, PartialEq)]
+#[derive(Serialize, Clone, Copy, Deserialize, Debug, Eq, Hash, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Tee {
     AzSnpVtpm,
@@ -40,9 +40,10 @@ pub enum Tee {
     // IBM Z Secure Execution
     Se,
 
-    // This value is only used for testing an attestation server, and should not
+    // These values are only used for testing an attestation server, and should not
     // be used in an actual attestation scenario.
     Sample,
+    SampleDevice,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
