@@ -29,6 +29,7 @@ pub use tee::snp::{Error as SnpDecodeError, SnpAttestation};
 pub enum Tee {
     AzSnpVtpm,
     AzTdxVtpm,
+    Nvidia,
     Sev,
     Sgx,
     Snp,
