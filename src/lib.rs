@@ -41,6 +41,9 @@ pub enum Tee {
     // IBM Z Secure Execution
     Se,
 
+    /// Hygon DCU (Deep Computing Unit)
+    HygonDcu,
+
     // These values are only used for testing an attestation server, and should not
     // be used in an actual attestation scenario.
     Sample,
