@@ -1,0 +1,80 @@
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256, Sha384, Sha512};
+use strum::{AsRefStr, Display, EnumString};
+
+/// Hash algorithms used to calculate runtime/init data binding
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, AsRefStr, Display, EnumString)]
+#[serde(rename_all = "lowercase")]
+pub enum HashAlgorithm {
+    #[strum(ascii_case_insensitive)]
+    #[strum(serialize = "sha256")]
+    Sha256,
+
+    #[strum(ascii_case_insensitive)]
+    #[strum(serialize = "sha384")]
+    Sha384,
+
+    #[strum(ascii_case_insensitive)]
+    #[strum(serialize = "sha512")]
+    Sha512,
+}
+
+impl HashAlgorithm {
+    pub fn accumulate_hash(&self, materials: Vec<u8>) -> Vec<u8> {
+        match self {
+            HashAlgorithm::Sha256 => {
+                let mut hasher = Sha256::new();
+                hasher.update(materials);
+                hasher.finalize().to_vec()
+            }
+            HashAlgorithm::Sha384 => {
+                let mut hasher = Sha384::new();
+                hasher.update(materials);
+                hasher.finalize().to_vec()
+            }
+            HashAlgorithm::Sha512 => {
+                let mut hasher = Sha512::new();
+                hasher.update(materials);
+                hasher.finalize().to_vec()
+            }
+        }
+    }
+}
+
+impl Default for HashAlgorithm {
+    fn default() -> Self {
+        Self::Sha384
+    }
+}
+
+fn hash_reportdata<D: Digest>(material: &[u8]) -> Vec<u8> {
+    D::new().chain_update(material).finalize().to_vec()
+}
+
+impl HashAlgorithm {
+    /// Return the hash value length in bytes
+    pub fn digest_len(&self) -> usize {
+        match self {
+            HashAlgorithm::Sha256 => 32,
+            HashAlgorithm::Sha384 => 48,
+            HashAlgorithm::Sha512 => 64,
+        }
+    }
+
+    pub fn digest(&self, material: &[u8]) -> Vec<u8> {
+        match self {
+            HashAlgorithm::Sha256 => hash_reportdata::<Sha256>(material),
+            HashAlgorithm::Sha384 => hash_reportdata::<Sha384>(material),
+            HashAlgorithm::Sha512 => hash_reportdata::<Sha512>(material),
+        }
+    }
+
+    /// Return a list of all supported hash algorithms.
+    pub fn list_all() -> Vec<Self> {
+        vec![
+            HashAlgorithm::Sha256,
+            HashAlgorithm::Sha384,
+            HashAlgorithm::Sha512,
+        ]
+    }
+}
