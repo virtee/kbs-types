@@ -85,8 +85,10 @@ pub enum TeePubKey {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Attestation {
-    #[serde(rename = "tee-pubkey")]
-    pub tee_pubkey: TeePubKey,
+    #[serde(rename = "init-data")]
+    pub init_data: Option<Value>,
+    #[serde(rename = "runtime-data")]
+    pub runtime_data: Value,
     #[serde(rename = "tee-evidence")]
     pub tee_evidence: Value,
 }
@@ -430,19 +432,23 @@ mod tests {
     fn parse_attestation_ec() {
         let data = r#"
         {
-            "tee-pubkey": {
-                "kty": "EC",
-                "crv": "fakecrv",
-                "alg": "fakealgorithm",
-                "x": "fakex",
-                "y": "fakey"
+            "runtime-data": {
+                "tee-pubkey": {
+                    "kty": "EC",
+                    "crv": "fakecrv",
+                    "alg": "fakealgorithm",
+                    "x": "fakex",
+                    "y": "fakey"
+                }
             },
             "tee-evidence": "fakeevidence"
         }"#;
 
         let attestation: Attestation = serde_json::from_str(data).unwrap();
+        let tee_pubkey = attestation.runtime_data.pointer("/tee-pubkey").unwrap();
+        let tee_pubkey: TeePubKey = serde_json::from_value(tee_pubkey.clone()).unwrap();
 
-        let TeePubKey::EC { alg, crv, x, y } = attestation.tee_pubkey else {
+        let TeePubKey::EC { alg, crv, x, y } = tee_pubkey else {
             panic!("Must be an EC key");
         };
 
@@ -457,18 +463,22 @@ mod tests {
     fn parse_attestation_rsa() {
         let data = r#"
         {
-            "tee-pubkey": {
-                "kty": "RSA",
-                "alg": "fakealgorithm",
-                "n": "fakemodulus",
-                "e": "fakeexponent"
+            "runtime-data": {
+                "tee-pubkey": {
+                    "kty": "RSA",
+                    "alg": "fakealgorithm",
+                    "n": "fakemodulus",
+                    "e": "fakeexponent"
+                }
             },
             "tee-evidence": "fakeevidence"
         }"#;
 
         let attestation: Attestation = serde_json::from_str(data).unwrap();
+        let tee_pubkey = attestation.runtime_data.pointer("/tee-pubkey").unwrap();
+        let tee_pubkey: TeePubKey = serde_json::from_value(tee_pubkey.clone()).unwrap();
 
-        let TeePubKey::RSA { alg, k_mod, k_exp } = attestation.tee_pubkey else {
+        let TeePubKey::RSA { alg, k_mod, k_exp } = tee_pubkey else {
             panic!("Must be a RSA key");
         };
 
