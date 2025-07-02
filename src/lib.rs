@@ -8,6 +8,9 @@ extern crate alloc;
 mod error;
 pub use error::{KbsTypesError, Result};
 
+mod hash_algorithm;
+pub use hash_algorithm::HashAlgorithm;
+
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use alloc::{string::String, vec::Vec};
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
