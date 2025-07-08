@@ -44,6 +44,9 @@ pub enum Tee {
     /// Hygon DCU (Deep Computing Unit)
     HygonDcu,
 
+    // Trusted Platform Module
+    Tpm,
+
     // These values are only used for testing an attestation server, and should not
     // be used in an actual attestation scenario.
     Sample,
