@@ -245,7 +245,7 @@ mod tests {
     use crate::*;
 
     #[cfg(all(feature = "alloc", not(feature = "std")))]
-    use alloc::{collections::btree_map::BTreeMap, string::ToString};
+    use alloc::string::ToString;
 
     #[test]
     fn parse_request() {

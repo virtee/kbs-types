@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256, Sha384, Sha512};
 use strum::{AsRefStr, Display, EnumString};
 
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use alloc::{vec, vec::Vec};
+
 /// Hash algorithms used to calculate runtime/init data binding
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, AsRefStr, Display, EnumString)]
 #[serde(rename_all = "lowercase")]
