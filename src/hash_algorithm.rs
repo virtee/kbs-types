@@ -22,28 +22,6 @@ pub enum HashAlgorithm {
     Sha512,
 }
 
-impl HashAlgorithm {
-    pub fn accumulate_hash(&self, materials: Vec<u8>) -> Vec<u8> {
-        match self {
-            HashAlgorithm::Sha256 => {
-                let mut hasher = Sha256::new();
-                hasher.update(materials);
-                hasher.finalize().to_vec()
-            }
-            HashAlgorithm::Sha384 => {
-                let mut hasher = Sha384::new();
-                hasher.update(materials);
-                hasher.finalize().to_vec()
-            }
-            HashAlgorithm::Sha512 => {
-                let mut hasher = Sha512::new();
-                hasher.update(materials);
-                hasher.finalize().to_vec()
-            }
-        }
-    }
-}
-
 impl Default for HashAlgorithm {
     fn default() -> Self {
         Self::Sha384
