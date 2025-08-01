@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256, Sha384, Sha512};
+use sm3::Sm3;
 use strum::{AsRefStr, Display, EnumString};
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
@@ -20,6 +21,10 @@ pub enum HashAlgorithm {
     #[strum(ascii_case_insensitive)]
     #[strum(serialize = "sha512")]
     Sha512,
+
+    #[strum(ascii_case_insensitive)]
+    #[strum(serialize = "sm3")]
+    Sm3,
 }
 
 impl Default for HashAlgorithm {
@@ -39,6 +44,7 @@ impl HashAlgorithm {
             HashAlgorithm::Sha256 => 32,
             HashAlgorithm::Sha384 => 48,
             HashAlgorithm::Sha512 => 64,
+            HashAlgorithm::Sm3 => 32,
         }
     }
 
@@ -47,6 +53,7 @@ impl HashAlgorithm {
             HashAlgorithm::Sha256 => hash_reportdata::<Sha256>(material),
             HashAlgorithm::Sha384 => hash_reportdata::<Sha384>(material),
             HashAlgorithm::Sha512 => hash_reportdata::<Sha512>(material),
+            HashAlgorithm::Sm3 => hash_reportdata::<Sm3>(material),
         }
     }
 
@@ -56,6 +63,7 @@ impl HashAlgorithm {
             HashAlgorithm::Sha256,
             HashAlgorithm::Sha384,
             HashAlgorithm::Sha512,
+            HashAlgorithm::Sm3,
         ]
     }
 }
